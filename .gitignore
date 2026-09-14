@@ -32,3 +32,29 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Android Studio & IntelliJ
+.idea/
+*.iml
+.gradle/
+local.properties
+
+# 编译产物
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 签名文件与密钥（极其重要，切勿提交）
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+
+# 如果你未来使用 Firebase 等服务
+google-services.json
