@@ -20,12 +20,12 @@ import app.zhizhi.util.formatDuration
 /**
  * 通知。三条通道，全部无声、无振动、无呼吸灯：
  *
- *  - focus_monitor  IMPORTANCE_MIN：前台服务的常驻通知。IMPORTANCE_MIN（"最小化"）会让它
+ *  - zhizhi_monitor  IMPORTANCE_MIN：前台服务的常驻通知。IMPORTANCE_MIN（"最小化"）会让它
  *    在通知栏里被折叠到最底部、不在状态栏显示图标——这是能做到的"最安静"的形态。
- *  - focus_alerts   IMPORTANCE_HIGH：**提醒卡片的降级通道**。当悬浮窗在这个 ROM 上弹不出来时，
+ *  - zhizhi_alerts   IMPORTANCE_HIGH：**提醒卡片的降级通道**。当悬浮窗在这个 ROM 上弹不出来时，
  *    用一条横幅通知把同一组选项给用户。虽然是 HIGH，但通道关掉了声音和振动，
  *    所以只是视觉上的横幅，不会响。
- *  - focus_service_low  IMPORTANCE_LOW：缺权限、回到桌面被拦截之类的兜底提示。平时通知数恒为 0。
+ *  - zhizhi_service_low  IMPORTANCE_LOW：缺权限、回到桌面被拦截之类的兜底提示。平时通知数恒为 0。
  *
  * 关于"不授予通知权限能不能更无感"：在 Android 13+ 上，POST_NOTIFICATIONS 被拒后
  * 通知确实不会出现在通知栏，但前台服务本身照常运行（服务生命周期不受该权限约束）。

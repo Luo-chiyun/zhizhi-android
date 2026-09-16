@@ -1,52 +1,6 @@
-<<<<<<< HEAD
-# 知止 (Zhizhi)
-
-> **知足不辱，知止不殆。** —— 《道德经·第四十四章》
-
-知止是一个完全开源、无广告、无订阅的 Android 专注辅助工具。
-
-它不会锁你的手机，不会打断你的操作，也不会在你的屏幕上放一个烦人的计时器。它只做一件事：**在你可能忘记初衷的时候，轻轻问一句：“你进来时想做什么？”**
-
-## ✨ 核心功能
-
-- **安静运行**：后台默默监测，屏幕上无任何常驻悬浮窗。
-- **意图确认**：当你在学习模式下打开娱乐/社交应用超过预设时间，弹出一句温和的提醒，帮你找回初衷。
-- **游戏防断触**：检测到打开游戏时，在游戏加载前完成确认，游戏中绝对静默，避免局内弹窗打断操作。
-- **休息计时器**：学习途中休息设个时间，到点轻轻提醒你回来，适合不设闹钟的人。
-- **纯本地运行**：所有数据都在本地处理，不会上传任何用户行为记录。
-
-## 📥 下载与安装
-
-请前往 [Releases](https://github.com/Luo-chiyun/zhizhi/releases) 页面下载最新的 APK 文件。
-
-> **注意**：安装后需要引导授予“使用情况访问”、“悬浮窗”和“通知”权限。部分国内定制系统（小米、华为、OPPO等）可能还需要手动允许“自启动”和“后台弹出界面”。
-
-## 🛠️ 权限说明
-
-| 权限 | 用途 |
-|---|---|
-| 使用情况访问 | 用于识别当前打开的应用 |
-| 悬浮窗 | 用于显示温和提醒 |
-| 通知 | 用于维持后台服务运行（静默通道，无声音无振动） |
-
-## 💡 名字的由来
-
-知止，亦名 **Memento**（未来 iOS 版命名）。
-一个说的是“知道何时停下”，一个说的是“记住你为何而来”。两个名字都在讲同一件事：把“你原本想做什么”还给你。
-
-## 💰 打赏与支持
-
-知止完全免费，不设内购，不设订阅。如果它确实帮到了你，你可以请作者喝杯咖啡。
-
-（请在此处插入你的打赏二维码图片）
-
-## 📄 开源协议
-
-本项目采用 [MIT License](LICENSE) 开源。你可以自由使用、修改和分发。
-=======
 # 知止 ZhiZhi
 
-> 知足不辱，知止不殆，可以长久。
+> **知足不辱，知止不殆，可以长久。**
 > —— 《道德经·第四十四章》
 
 **知止不殆**：知道适可而止，就不会遇到危险。这是一种充满智慧的自我保护。
@@ -54,9 +8,10 @@
 这个工具想做的，就是把这句两千多年前的话，变成一次温和的提醒。
 
 不锁机、不弹常驻计时器，只在你可能走神的时候，轻轻问一句：
-**“知止不殆。你进来时想做什么？”**
 
-答案永远由你给。它不替你做决定，也不替你关掉应用——只是把“你原本想做什么”还给你。
+> **“知止不殆。你进来时想做什么？”**
+
+答案永远由你给。它不替你做决定，也不替你关掉任何应用——只是把“你原本想做什么”还给你。
 
 ---
 
@@ -70,14 +25,71 @@
 | 不在设定时段内 | 服务照常在后台，但完全不监测、不提醒 |
 | 某个应用不想管 | 卡片上点「别再提醒这个应用」，永久移出监控名单 |
 
+提醒卡片上有四个答案，你选哪个都行：
+
+* 已完成，退出
+* 还在用，再给 N 分钟
+* 我走神了，退出
+* 我正在做正事，请勿打扰（进入冷静期，一段时间内不再打扰）
+
 ## 三条不可动摇的设计约束
 
 1. **没有联网权限。** 应用不声明 `android.permission.INTERNET`，这是系统强制的物理隔离，不是承诺。
-   识别、计时、统计全部在本机 DataStore 里，连应用名都不记，只记次数和总时长。
+   识别、计时、统计全部在本机 DataStore 里，只记次数和总时长，不记你看了什么。
+   CI 里有一条守门检查：APK 一旦出现 `INTERNET` 权限，构建直接失败。
 2. **不使用 AccessibilityService。** 前台应用识别只靠 `UsageStatsManager`。
    没有无障碍权限，也就不会被判定为“滥用无障碍”。
 3. **不强制、不锁机。** 应用无法、也不会替你关闭别的应用。
-   “退出”按钮的实现在下面“技术决策”里有说明。
+   “退出”按钮的实现在下面「技术决策」第 2 条里有说明。
+
+---
+
+## 下载与安装
+
+前往 [**Releases**](https://github.com/Luo-chiyun/zhizhi-android/releases) 下载最新 APK。
+
+当前版本 **1.0.4**，约 1.8 MB，支持 Android 8.0（API 26）及以上。
+
+> **务必认准正式签名的包。** 文件名形如 `ZhiZhi-1.0.4-release.apk`。
+> 不要安装调试包（`app-debug.apk`，包名带 `.debug`）——签名不同，装了它之后无法用正式版覆盖升级，
+> 只能卸载重装、数据全丢。
+
+首次启动会引导你授予权限，每一项都写明了用途。
+
+### 权限说明
+
+| 权限 | 必要性 | 用途 |
+| --- | --- | --- |
+| 使用情况访问 | **必需** | 读取“当前前台是哪个应用”。这是唯一的数据来源 |
+| 悬浮窗 | **必需** | 显示提醒卡片；同时是系统允许本应用在后台持续运行的前提 |
+| 通知 | 可选 | 只用于一条无声、不振动的前台服务通知 |
+| 电池优化白名单 | 可选 | 避免系统在后台把监测服务杀掉 |
+
+**国产 ROM 还多一步。** 只开上面这几项，提醒往往还是弹不出来：
+
+* **小米 / 红米 / POCO**：除悬浮窗外还要单独允许「后台弹出界面」
+* **OPPO / 一加 / realme**：要开「允许后台弹出界面」「允许自启动」「允许关联启动」三个开关
+* **华为 / 荣耀**：把应用启动管理从「自动管理」改成「手动管理」，再打开三个子开关
+* **vivo / iQOO**：要开「后台弹出界面」和「自启动」
+
+应用内的权限页会**自动识别机型**，只显示你这台机器对应的步骤，并给出「跳到对应设置页」的按钮；
+路径找不到时可以在系统设置里直接搜索「知止」。
+
+---
+
+## 分类与预设名单
+
+每个应用有三种状态：
+
+| 状态 | 含义 |
+| --- | --- |
+| 不监控 | 明确不管它（套用预设不会覆盖这个决定） |
+| 娱乐 / 社交 | 超时后温和提醒 |
+| 游戏 | 启动前确认一次，局内静默 |
+
+内置预设名单 **296 条**（不用监测 93 / 娱乐 103 / 游戏 100），
+覆盖国内主流应用；套用时会先与你机器上已安装的列表求交集，只对装了的应用生效。
+偏门应用可以自己在「监控哪些应用」里手动勾选。
 
 ---
 
@@ -85,40 +97,29 @@
 
 ### 本地构建
 
-需要 JDK 17+ 和 Android SDK（platform 35 + build-tools 35.0.0）。
+需要 **JDK 17+** 和 **Android SDK（platform 35 + build-tools 35.0.0）**。
 
 ```bash
-# 1. 工具链（WSL / Linux，一键装好 SDK 与 Gradle）
+# WSL / Linux：一键装好 SDK 与 Gradle
 bash setup_toolchain.sh
 
-# 2. 构建 debug APK
 export ANDROID_HOME=$HOME/android-sdk
-./gradlew assembleDebug
-# 产物：app/build/outputs/apk/debug/app-debug.apk
+./gradlew assembleDebug        # 产物：app/build/outputs/apk/debug/app-debug.apk
+./gradlew assembleRelease      # 需要签名配置，见下
 ```
 
-Windows 上直接装 Android Studio（Ladybug 或更新），用 IDE 打开本目录即可，
-无需改动任何配置——`compileSdk 35 / minSdk 26 / targetSdk 35` 都是当前稳定组合。
+Windows 上直接装 Android Studio 用 IDE 打开本目录即可，无需改动任何配置——
+`compileSdk 35 / minSdk 26 / targetSdk 35` 都是当前稳定组合。
 
-### 用 GitHub Actions 构建（推荐给不想装 SDK 的人）
+调试包会带上 `.debug` 后缀（包名 `app.zhizhi.debug`），所以调试版和正式版可以同时装在一台手机上。
 
-把仓库推到 GitHub，Actions 会自动出 APK。见 `.github/workflows/build.yml`。
-打 tag（`v0.1.0`）会额外构建 release 包；配置好下面这四个 secret 就会用你的正式签名：
-
-```
-KEYSTORE_BASE64   # base64 -w0 release.jks
-KEYSTORE_PASSWORD
-KEY_ALIAS
-KEY_PASSWORD
-```
-
-### 发布正式签名
+### 正式签名（发布用）
 
 ```bash
-keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 4096 \
+keytool -genkeypair -v -keystore zhizhi-release.jks -keyalg RSA -keysize 4096 \
         -validity 10950 -alias zhizhi
 cat > keystore.properties <<'EOF'
-storeFile=release.jks
+storeFile=zhizhi-release.jks
 storePassword=你的密码
 keyAlias=zhizhi
 keyPassword=你的密码
@@ -126,24 +127,32 @@ EOF
 ./gradlew assembleRelease
 ```
 
-`keystore.properties` 与 `*.jks` 已在 `.gitignore` 里。**不要把它们提交上去。**
+`keystore.properties` 与 `*.jks` 已在 `.gitignore` 里。**不要把它们提交上去**，
+也不要把它们放进任何云盘同步的目录里。丢了就永远无法给老用户发升级包。
 
----
+### 用 GitHub Actions 构建
 
-## 安装
+推到 GitHub 后 Actions 会自动出包，产物在仓库的 **Actions** 页下载。
+打 tag（`v1.0.4`）时还会自动建 Release 并挂上 APK。
 
-APK 没有上任何应用商店，从 GitHub Releases 直接下载安装即可。
-首次启动会引导你授予四件事，每一项都写明了用途：
+要让 CI 用**你的正式签名**，去 **Settings → Secrets and variables → Actions** 加四个 secret：
 
-| 权限 | 必要性 | 用途 |
-| --- | --- | --- |
-| 使用情况访问 | 必需 | 读取“当前前台是哪个应用”。这是唯一的数据来源 |
-| 悬浮窗 | 必需 | 显示提醒卡片；**同时是系统允许本应用在后台持续运行的前提** |
-| 通知 | 可选 | 只用于一条无声、不振动的前台服务通知 |
-| 电池优化白名单 | 可选 | 避免系统在后台把监测服务杀掉 |
+| Secret 名 | 值 |
+| --- | --- |
+| `KEYSTORE_BASE64` | `base64 -w0 zhizhi-release.jks` 的输出 |
+| `KEYSTORE_PASSWORD` | keystore.properties 里的 storePassword |
+| `KEY_ALIAS` | `zhizhi` |
+| `KEY_PASSWORD` | keystore.properties 里的 keyPassword |
 
-国产 ROM 还多一步：小米叫“后台弹出界面”、华为叫“悬浮窗”或“应用启动管理”、
-OPPO/VIVO 叫“允许后台弹出界面”。权限页里有一个按钮会直接跳到对应设置。
+同时去 **Settings → Actions → General → Workflow permissions** 选 **Read and write**。
+
+CI 有三条守门检查，任何一条不过都不会发布：
+
+1. APK 不得声明 `INTERNET` 权限
+2. 配了密钥时，release 包的签名证书不得是 `CN=Android Debug`
+3. 没配密钥时，**不许**发 Release（只会把包留在 Actions 产物里，并打印失败原因）
+
+第 3 条是刻意的：debug 签名的包一旦发出去，装了它的用户以后无法升级到正式版。
 
 ---
 
@@ -155,16 +164,18 @@ app/src/main/java/app/zhizhi/
 │   ├── MonitorSettings.kt      设置模型 + 学习时段判定（支持跨午夜）
 │   ├── SettingsRepository.kt   JSON blob 持久化
 │   ├── AppClassifier.kt        分类判定（用户设置 > 预设 > 忽略）
-│   ├── PresetCatalog.kt        预设应用名单（中文主流应用）
-│   └── StatsStore.kt           逐日计数，只保留 120 天
+│   ├── PresetCatalog.kt        预设应用名单（296 条国内主流应用）
+│   ├── StatsStore.kt           逐日计数，只保留 120 天
+│   └── DiagnosticsStore.kt     运行日志（内存 1000 条 / 磁盘 200 条）
 ├── monitor/
 │   ├── ForegroundAppTracker.kt UsageStatsManager 事件流 → 内存态前台应用
 │   ├── MonitorService.kt       前台服务 + 自适应轮询主循环
 │   └── BootReceiver.kt         可选的开机恢复
 ├── policy/ReminderPolicy.kt    分级提醒策略（纯逻辑，可单独测试）
-├── overlay/OverlayController.kt 锚点窗口 + 提醒卡片
-├── notify/Notifications.kt     两条无声通知通道
+├── overlay/OverlayController.kt 1×1 锚点窗口 + 提醒卡片
+├── notify/Notifications.kt     三条通知通道（常驻 / 兜底 / 提示）
 ├── ui/                         Compose 界面
+│   └── screens/OemGuides.kt    各厂商权限设置路径
 └── util/                       权限跳转、格式化
 ```
 
@@ -188,9 +199,6 @@ app/src/main/java/app/zhizhi/
 先挂上那个 1×1 的隐形锚点窗口，再 `startForeground()`。反过来写，
 开机自启和 `START_STICKY` 重启就会直接失败。
 
-> 参考：Android 15 behavior changes → “Restrictions on starting foreground services
-> while an app holds the `SYSTEM_ALERT_WINDOW` permission”
-
 ### 2. 没有无障碍权限，靠什么“退出”
 
 `SYSTEM_ALERT_WINDOW` 同时是**“允许从后台启动 Activity”**的豁免条件之一。
@@ -199,10 +207,7 @@ app/src/main/java/app/zhizhi/
 
 但豁免清单会随版本变动、部分 ROM 还会加码，所以 `goHomeSafely()` 做了一次实测：
 发起后 1.5 秒回查前台是否还停在原应用，**成功和失败都记进本地统计**
-（“本地记录”页里的“一键回到桌面 成功/尝试次数”），失败则给一条可点的通知兜底。
-这是本项目最需要在真机上验证的一条，验收清单里排第一。
-
-> 参考：Android “Activity security / background activity launch restrictions” 的豁免列表
+（记录页里的“一键回到桌面 成功/尝试次数”），失败则给一条可点的通知兜底。
 
 ### 3. 猜“当前前台是谁”不能只看查询窗口里的最后一个事件
 
@@ -220,40 +225,46 @@ app/src/main/java/app/zhizhi/
 
 ## 耗电
 
-轮询节奏是自适应的：
+轮询节奏只分两档：
 
 | 状态 | 间隔 |
 | --- | --- |
-| 正在计时，或刚发生应用切换（15 秒内） | 1 秒 |
-| 在学习时段内、但没有目标应用在前台 | 2.5 秒 |
-| 不在学习时段 / 屏幕关闭 | 20 秒 |
+| 正在监测（总开关开、在时段内、屏幕亮着、有使用情况权限） | 1 秒 |
+| 上述任一条件不满足 | 20 秒 |
 
-屏幕关闭时主循环不查询事件、不建窗口，等 `ACTION_USER_PRESENT` 再 `seed()` 恢复。
+被挡住的时候主循环**完全不查询事件、不建窗口**，只等下一轮重判。
+屏幕关闭时也一样，等 `ACTION_USER_PRESENT` 再重新校准。
 锚点窗口只有 1 个像素、不可触摸、不参与绘制，代价接近 0。
 
 ---
 
-## 发布：GitHub 与 F-Droid
+## 隐私
 
-* **GitHub Releases**：签名 APK 挂在 tag 上。
-* **IzzyOnDroid**：可以直接提 issue 申请收录。硬性要求已经满足——
-  FOSS 许可证、无追踪、无广告、release 签名 APK（不能带 `debuggable` / `testOnly`）、
-  APK 挂在 tag 上、体积远小于 30 MB、README 有清晰说明。
-  另外需要 `fastlane/metadata/android/<locale>/` 下的描述与截图，本仓库已备好文案与图标，
-  **截图还需要你补**（`fastlane/metadata/android/zh-CN/images/phoneScreenshots/`）。
-* **F-Droid 主仓库**：需要由 F-Droid 用自己的工具链从源码构建。本项目没有任何
-  非自由依赖、没有 Play Services、没有预编译二进制，理论上可过；
-  为了可复现构建，`app/build.gradle.kts` 里已关闭 `dependenciesInfo` 注入。
+* 没有联网权限，**不可能**上传任何东西——这一点由系统保证，不需要你信任我。
+* 本地只存三类数据：设置、逐日使用次数/时长、以及最多 200 条运行日志。
+* 运行日志只记“几点、哪个包名、发生了什么”，用于排查问题，可以在设置里一键清空。
+* 没有任何统计 SDK、广告 SDK、崩溃上报。
+
+---
+
+## 已知限制
+
+* **不是锁机软件。** 你随时可以忽略卡片继续玩，这是设计如此。
+* 前台识别的延迟是 0.5–2 秒，所以“游戏启动前确认”是在游戏加载期间弹的，不是 0 延迟拦截。
+* 部分 ROM 会限制后台弹窗，即使权限都给全也可能弹不出来——此时会自动降级成一条高优先级通知。
+* 应用无法关闭别的应用（Android 14 起第三方应用没有这个能力）。
+
+更多问题见 [`docs/常见问题.md`](docs/常见问题.md)。
 
 ---
 
 ## 打赏
 
-全部功能免费，无内购、无广告、无会员。关于页有一个收款码的位置——
-把 `app/src/main/res/drawable-nodpi/donation_qr.png` 换成你自己的即可
-（当前是一个占位图，扫不出任何东西）。
+全部功能免费，无内购、无广告、无会员。如果它确实帮到了你，可以请作者喝杯咖啡。
+
+应用「关于」页里有微信 / 支付宝收款码。想换成自己的收款码，
+替换 `app/src/main/res/drawable-nodpi/donation_wechat.png` 和 `donation_alipay.png` 即可。
 
 ## 许可证
 
-GPL-3.0-or-later。你可以自行审阅、编译、修改。
->>>>>>> 74f344c (知止 1.0.2：品牌定名、UI 按设计稿重做、正式签名)
+[GPL-3.0-or-later](LICENSE)。你可以自由审阅、编译、修改和分发。

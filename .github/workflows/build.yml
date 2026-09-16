@@ -48,6 +48,11 @@ jobs:
             exit 0
           fi
           echo "$KEYSTORE_BASE64" | base64 -d > release.jks
+          # JKS 的魔数是 FE ED FE ED，用来挡住"粘错东西"这种最常见的错误
+          if ! head -c 4 release.jks | xxd -p | grep -q '^feedfeed$'; then
+            echo "::error::KEYSTORE_BASE64 解码后不是有效的 JKS。检查是不是把整个文件转成了 base64（base64 -w0 zhizhi-release.jks）。"
+            exit 1
+          fi
           cat > keystore.properties <<EOF
           storeFile=release.jks
           storePassword=$KEYSTORE_PASSWORD
@@ -66,7 +71,7 @@ jobs:
         run: ./gradlew --no-daemon lint
         continue-on-error: true
 
-      - name: 守门：APK 不得声明 INTERNET 权限
+      - name: 守门 1／APK 不得声明 INTERNET 权限
         run: |
           set -e
           APK=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
@@ -80,13 +85,20 @@ jobs:
             exit 1
           fi
 
-      - name: 守门：release 包不能是 debug 签名
-        if: steps.signing.outputs.has_key == 'true'
+      - name: 记录签名信息（发布任务据此判断）
         run: |
           set -e
           APK=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
           "$ANDROID_HOME"/build-tools/35.0.0/apksigner verify --print-certs "$APK" |
             tee /tmp/certs.txt
+          mkdir -p dist
+          cp "$APK" dist/app-release.apk
+          cp /tmp/certs.txt dist/SIGNER.txt
+
+      - name: 守门 2／配了密钥就不能签成 debug
+        if: steps.signing.outputs.has_key == 'true'
+        run: |
+          set -e
           if grep -q 'CN=Android Debug' /tmp/certs.txt; then
             echo "::error::release APK 用的是 debug 签名。检查 KEYSTORE_BASE64 等 secrets 是否正确。"
             exit 1
@@ -97,11 +109,18 @@ jobs:
         if: always()
         run: rm -f release.jks keystore.properties
 
-      - name: Upload APKs
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: zhizhi-apk-${{ github.sha }}
-          path: app/build/outputs/apk/**/*.apk
+          name: zhizhi-release-apk
+          path: dist/
+          if-no-files-found: error
+
+      - name: Upload debug APK（仅供自测，不发布）
+        uses: actions/upload-artifact@v4
+        with:
+          name: zhizhi-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
   # 单独一个 job 申请写权限：只有打 tag 时才跑，而且必须先通过上面的构建与守门。
@@ -112,22 +131,47 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: zhizhi-apk-${{ github.sha }}
-
-      - name: 兜底：没有正式密钥就不许发 Release
+      - name: 守门 3／没有正式密钥就不许发 Release
         if: needs.build.outputs.has_key != 'true'
         run: |
           echo "::error::仓库没有配置正式签名密钥（KEYSTORE_BASE64 等 secrets）。"
-          echo "::error::现在发出去的是 debug 签名的包 —— 用户日后无法用正式密钥覆盖升级。"
-          echo "::error::要么配好 secrets，要么把本地用正式密钥签好的 APK 手动拖到 Release 上。"
+          echo "::error::现在发出去的就是 debug 签名的包 —— 装了它的用户以后无法升级到正式版。"
+          echo "::error::要么在 Settings → Secrets and variables → Actions 里配好那四个 secret，"
+          echo "::error::要么把本地用正式密钥签好的 APK 手动拖到 Release 上。"
           exit 1
 
-      - name: Attach APKs to the release
-        uses: softprops/action-gh-release@v2
+      - uses: actions/download-artifact@v4
         with:
-          files: |
-            release/*.apk
-            **/*.apk
-          generate_release_notes: true
+          name: zhizhi-release-apk
+
+      - name: 签名信息 + 规范化文件名
+        run: |
+          set -e
+          cat SIGNER.txt
+          if grep -q 'CN=Android Debug' SIGNER.txt; then
+            echo "::error::这个包是 debug 签名的，拒绝发布。"
+            exit 1
+          fi
+          VER="${GITHUB_REF_NAME#v}"
+          mv app-release.apk "ZhiZhi-${VER}-release.apk"
+          echo "ASSET=ZhiZhi-${VER}-release.apk" >> "$GITHUB_ENV"
+
+      # 用 gh 而不是第三方 action：gh 在 runner 上自带，
+      # 而且第三方 action 往刚建出来的 Release 上挂资产时会撞上
+      # "Not Found - update-a-release-asset" 的竞态。
+      - name: 创建或更新 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          TAG="$GITHUB_REF_NAME"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG 已存在，覆盖附件。"
+            gh release upload "$TAG" "$ASSET" --clobber
+          else
+            gh release create "$TAG" "$ASSET" \
+              --title "知止 ${TAG#v}" \
+              --generate-notes
+          fi
+          echo "---- Release 附件 ----"
+          gh release view "$TAG" --json assets --jq '.assets[].name'

@@ -1,85 +1,37 @@
-<<<<<<< HEAD
-# Gradle files
-.gradle/
-build/
-
-# Local configuration file (sdk path, etc)
-local.properties
-
-# Log/OS Files
-*.log
-
-# Android Studio generated files and folders
-captures/
-.externalNativeBuild/
-.cxx/
-*.aab
-*.apk
-output-metadata.json
-
-# IntelliJ
-*.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
-
-# Keystore files
-*.jks
-*.keystore
-
-# Google Services (e.g. APIs or Firebase)
-google-services.json
-
-# Android Profiling
-*.hprof
-
-# Android Studio & IntelliJ
-.idea/
-*.iml
-.gradle/
-local.properties
-
-# 编译产物
-/build
-/app/build
-/captures
-.externalNativeBuild
-.cxx
-
-# 系统文件
-.DS_Store
-Thumbs.db
-
-# 签名文件与密钥（极其重要，切勿提交）
-*.jks
-*.keystore
-keystore.properties
-signing.properties
-
-# 如果你未来使用 Firebase 等服务
-google-services.json
-=======
 # Gradle
 .gradle/
 build/
 app/build/
-captures/
-*.hprof
+.kotlin/
 
-# Android Studio / IntelliJ
-.idea/
-*.iml
+# 本地配置（SDK 路径等）
 local.properties
-.DS_Store
-
-# 签名材料：绝不入库
-*.jks
-*.keystore
-keystore.properties
 
 # 构建产物
 *.apk
 *.aab
 *.ap_
->>>>>>> 74f344c (知止 1.0.2：品牌定名、UI 按设计稿重做、正式签名)
+output-metadata.json
+captures/
+.externalNativeBuild/
+.cxx/
+*.hprof
+*.log
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+
+# 签名材料：绝不入库
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+release.jks
+
+# 第三方服务配置（本项目不需要，占位防止误提交）
+google-services.json
+
+# 系统文件
+.DS_Store
+Thumbs.db
