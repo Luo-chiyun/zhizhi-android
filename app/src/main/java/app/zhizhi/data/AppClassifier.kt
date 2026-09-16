@@ -72,7 +72,7 @@ class AppClassifier(
 
     /**
      * 真正会被计时/提醒的应用数。
-     * 不能直接用 overrides.size —— NEUTRAL 也在 overrides 里，但它不监控。
+     * 不能直接用 overrides.size —— 预设里"不用监测"的应用也在 overrides 里，但它们不监控。
      */
     fun monitoredCount(): Int = overrides.values.count { it.isMonitored }
 

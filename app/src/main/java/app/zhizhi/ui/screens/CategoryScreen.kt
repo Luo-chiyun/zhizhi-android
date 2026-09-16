@@ -137,7 +137,7 @@ fun CategoryScreen() {
                     entry.packageName.contains(query, ignoreCase = true)
                 val filterOk = when (filter) {
                     CategoryFilter.ALL -> true
-                    // "已选"= 会被提醒的。NEUTRAL 是"记下了但不管"，不该混进来。
+                    // "已选"= 会被提醒的。预设里"不用监测"的应用也在 overrides 里，不该混进来。
                     CategoryFilter.SELECTED -> selections[entry.packageName]?.isMonitored == true
                 }
                 textOk && filterOk
@@ -205,7 +205,6 @@ private fun AppRow(
 private fun categoryLabel(category: AppCategory): String = stringResource(
     when (category) {
         AppCategory.IGNORED -> R.string.cat_label_ignored
-        AppCategory.NEUTRAL -> R.string.cat_label_neutral
         AppCategory.ENTERTAINMENT -> R.string.cat_label_entertainment
         AppCategory.GAME -> R.string.cat_label_game
     },

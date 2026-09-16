@@ -15,15 +15,6 @@ enum class AppCategory {
     /** 不监控。默认值——本应用不会自动接管任何应用。 */
     IGNORED,
 
-    /**
-     * 不影响学习：明确知道它对这个人是工具而非消遣（词典、办公、网课、聊天工具等）。
-     *
-     * 行为上与 [IGNORED] 一样不提醒，但**语义上是一次决定**而不是"还没想过"。
-     * 分开的理由很实际：预设名单里"不影响学习"那一类需要有个落地的地方，
-     * 否则用户套用预设之后，这些应用和"没勾过"的应用长得一模一样，看不出预设起了作用。
-     */
-    NEUTRAL,
-
     /** 娱乐 / 社交：超时后温和提醒 */
     ENTERTAINMENT,
 
@@ -31,7 +22,7 @@ enum class AppCategory {
     GAME,
     ;
 
-    /** 只有这两类会被计时和提醒。其余（含 NEUTRAL）都只是"记下了分类"。 */
+    /** 只有这两类会被计时和提醒。IGNORED 只是"记下了不监控"。 */
     val isMonitored: Boolean
         get() = this == ENTERTAINMENT || this == GAME
 

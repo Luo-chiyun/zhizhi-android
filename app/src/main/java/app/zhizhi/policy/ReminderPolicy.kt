@@ -151,8 +151,7 @@ class ReminderPolicy {
         val out = mutableListOf<OverlayAction>()
 
         // ---- 没有可监控目标：结束会话 ----
-        // 用 isMonitored 而不是 "!= IGNORED"：NEUTRAL（不影响学习）同样不该被计时，
-        // 漏掉它会让那些应用被当成娱乐类去提醒。
+        // 用 isMonitored 而不是 "!= IGNORED"：将来若再加分类，默认不会被误当成娱乐类提醒。
         if (foregroundPackage == null || !category.isMonitored) {
             if (session != null) {
                 session = null
@@ -217,7 +216,7 @@ class ReminderPolicy {
                 }
             }
 
-            AppCategory.IGNORED, AppCategory.NEUTRAL -> Unit
+            AppCategory.IGNORED -> Unit
         }
 
         return out

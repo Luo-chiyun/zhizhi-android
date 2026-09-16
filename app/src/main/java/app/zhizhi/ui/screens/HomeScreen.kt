@@ -89,7 +89,7 @@ fun HomeScreen(
         scope.launch { Graph.settings.edit(block) }
     }
 
-    // 只数真正会被提醒的应用。NEUTRAL（不影响学习）也会存进 overrides，
+    // 只数真正会被提醒的应用。预设里"不用监测"的应用也会写进 overrides，
     // 直接用 overrides.size 会把它们算成"已选"，数字虚高。
     val monitoredCount = remember(overrides) { overrides.values.count { it.isMonitored } }
 

@@ -7,12 +7,16 @@ on:
   pull_request:
   workflow_dispatch:
 
+# 默认最小权限：构建任务只需要读代码。
+# 发布任务单独申请 contents: write —— 见下面的 release job。
 permissions:
   contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      has_key: ${{ steps.signing.outputs.has_key }}
     steps:
       - uses: actions/checkout@v4
 
@@ -40,7 +44,7 @@ jobs:
         run: |
           if [ -z "$KEYSTORE_BASE64" ]; then
             echo "has_key=false" >> "$GITHUB_OUTPUT"
-            echo "No release keystore configured — release build will fall back to debug signing."
+            echo "::warning::没有配置正式签名密钥，release 包会用 debug 签名，**不能发给用户**。"
             exit 0
           fi
           echo "$KEYSTORE_BASE64" | base64 -d > release.jks
@@ -62,18 +66,32 @@ jobs:
         run: ./gradlew --no-daemon lint
         continue-on-error: true
 
-      - name: Verify that the APK really has no INTERNET permission
+      - name: 守门：APK 不得声明 INTERNET 权限
         run: |
           set -e
           APK=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
           echo "checking $APK"
-          "$ANDROID_HOME"/build-tools/35.0.0/aapt2 dump permissions "$APK" > /tmp/perms.txt || \
-            "$ANDROID_HOME"/build-tools/35.0.0/aapt dump permissions "$APK" > /tmp/perms.txt
+          "$ANDROID_HOME"/build-tools/35.0.0/aapt2 dump permissions "$APK" |
+            tee /tmp/perms.txt || \
+          "$ANDROID_HOME"/build-tools/35.0.0/aapt dump permissions "$APK" > /tmp/perms.txt
           cat /tmp/perms.txt
           if grep -q 'android.permission.INTERNET' /tmp/perms.txt; then
             echo "::error::APK 声明了 INTERNET 权限，这违反了本项目的隐私约束"
             exit 1
           fi
+
+      - name: 守门：release 包不能是 debug 签名
+        if: steps.signing.outputs.has_key == 'true'
+        run: |
+          set -e
+          APK=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+          "$ANDROID_HOME"/build-tools/35.0.0/apksigner verify --print-certs "$APK" |
+            tee /tmp/certs.txt
+          if grep -q 'CN=Android Debug' /tmp/certs.txt; then
+            echo "::error::release APK 用的是 debug 签名。检查 KEYSTORE_BASE64 等 secrets 是否正确。"
+            exit 1
+          fi
+          echo "签名密钥看起来正常。"
 
       - name: Clean up signing material
         if: always()
@@ -86,9 +104,30 @@ jobs:
           path: app/build/outputs/apk/**/*.apk
           if-no-files-found: error
 
+  # 单独一个 job 申请写权限：只有打 tag 时才跑，而且必须先通过上面的构建与守门。
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: zhizhi-apk-${{ github.sha }}
+
+      - name: 兜底：没有正式密钥就不许发 Release
+        if: needs.build.outputs.has_key != 'true'
+        run: |
+          echo "::error::仓库没有配置正式签名密钥（KEYSTORE_BASE64 等 secrets）。"
+          echo "::error::现在发出去的是 debug 签名的包 —— 用户日后无法用正式密钥覆盖升级。"
+          echo "::error::要么配好 secrets，要么把本地用正式密钥签好的 APK 手动拖到 Release 上。"
+          exit 1
+
       - name: Attach APKs to the release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/release/*.apk
+          files: |
+            release/*.apk
+            **/*.apk
           generate_release_notes: true
