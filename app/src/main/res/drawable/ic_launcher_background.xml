@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  自适应图标背景层：从 logo 里直接采样出来的对角渐变（左上蓝 → 右下紫）。
+
+  为什么要拆成矢量而不是直接用那张 PNG：
+  Word→PDF→PNG 是栅格化产物，放大到启动器需要的尺寸会发虚；而且那张图自带白底和圆角，
+  直接当图标用会被系统再套一层遮罩，圆角里露出白角。拆成"矢量背景 + 透明前景"之后，
+  任意尺寸都锐利，遮罩行为也正确。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0" android:startY="0"
+                android:endX="108" android:endY="108">
+                <item android:offset="0" android:color="#FF56AEE3" />
+                <item android:offset="0.5" android:color="#FF9E97E8" />
+                <item android:offset="1" android:color="#FFD473F0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

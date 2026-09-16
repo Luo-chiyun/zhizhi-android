@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  状态栏 / 通知小图标。
+  这里刻意只用 logo 里那株嫩芽、不放"知止"两个字：24dp 的单色剪影下汉字会糊成一团。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 茎 -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M11.3,16.8h1.4v6.2h-1.4z" />
+    <!-- 左叶 -->
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M12,17.6 C6.6,15.2 3.4,10.6 3.4,4.2 C9.2,7.6 12,12.4 12,17.6 Z" />
+    <!-- 右叶 -->
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M12,17.6 C17.4,15.2 20.6,10.6 20.6,4.2 C14.8,7.6 12,12.4 12,17.6 Z" />
+</vector>

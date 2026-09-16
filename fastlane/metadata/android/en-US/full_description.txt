@@ -1,0 +1,45 @@
+No forced lock-outs. No permanent timer on your screen. It will not close apps for you.
+
+It does one thing: when you might be drifting, it quietly asks "what did you come here to do?"
+The answer is always yours to give.
+
+The question it asks is not "you have been playing too long" but "do you still remember what you came in for?"
+
+[HOW IT WORKS]
+
+* Set a study window (for example 20:00-22:00). Monitoring only happens inside it.
+* When you open a social or entertainment app, nothing appears on screen. It counts quietly in the background, and once you pass your threshold (5 minutes by default) a card appears in the corner.
+* When you open a game, it asks once before the loading screen: "do you really want to start now?" After you answer, the whole session is silent - no in-game popups, no broken touch input.
+* Taking a break during study? Start a break timer. When it runs out you get "break is over - back to studying?"
+* Need to be left alone? Pause for 30 minutes with one tap.
+
+The four answers on the card:
+* Done, leaving
+* Still looking, give me N more minutes
+* I drifted, leaving
+* I am actually working, do not disturb
+
+Choosing "actually working" starts a grace period.
+
+[PRIVACY]
+
+This app does not request the INTERNET permission. Without it, uploading behaviour data is not possible - enforced by the system, not by a promise.
+
+* Foreground app detection uses UsageStatsManager only, never an accessibility service.
+* Statistics record only counts and total monitored duration - never which app you opened, or when.
+* All data stays in the app's private directory. No cloud sync, no accounts.
+
+If you deny the notification permission, monitoring keeps running; only the notification is hidden.
+
+[PERMISSIONS]
+
+* Usage access: to read the current foreground app. The only data source for detection.
+* Display over other apps: to show the reminder card. It is also what the system requires for this app to keep running in the background.
+* Notifications (optional): one silent, non-vibrating foreground service notification.
+* Battery optimisation allow-list (optional): keeps the system from killing the monitor.
+
+Some vendor ROMs additionally require enabling "background pop-up" and "autostart" in system settings; the app has a button that jumps straight there.
+
+[OPEN SOURCE]
+
+GPL-3.0. Read, build and modify the code yourself. All features free - no in-app purchases, no ads, no subscription.

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      ========================================================================
+      隐私设计：本应用【不声明 android.permission.INTERNET】。
+      没有联网权限 = 物理上不可能上传任何行为数据。这一条由系统强制，
+      不依赖开发者的承诺，也不依赖应用商店审核。
+      任何后续改动都不得添加 INTERNET / ACCESS_NETWORK_STATE 权限。
+      ========================================================================
+    -->
+
+    <!-- 使用情况访问：检测前台应用。属于"特殊权限"，需用户在系统设置里手动授予。 -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- 悬浮窗：显示温和提醒；同时是 Android 15 起"后台启动前台服务"的豁免条件，
+         也是"允许从后台启动 Activity"（用于"一键退出到桌面"按钮）的豁免条件。 -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- 前台服务（Android 14+ 必须声明类型 + 对应权限） -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+    <!-- 可选：仅用于前台服务通知。拒绝后服务仍可运行、但通知不可见。 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- 可选：开机自启 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!--
+      不使用 QUERY_ALL_PACKAGES（那会被商店判为敏感权限）。
+      下面这段声明让我们可以通过 queryIntentActivities 拿到"所有带启动图标的应用"，
+      这正是分类界面需要的全部信息，也是 F-Droid / Play 都接受的做法。
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.USAGE_ACCESS_SETTINGS" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".ZhiZhiApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.FocusGuard"
+        tools:targetApi="35">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".monitor.MonitorService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="monitors_the_foreground_app_locally_to_deliver_user_configured_focus_nudges" />
+        </service>
+
+        <receiver
+            android:name=".monitor.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

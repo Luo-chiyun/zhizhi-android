@@ -1,0 +1,94 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-35 build-tools;35.0.0 platform-tools'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Configure release signing (only if secrets are present)
+        id: signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "has_key=false" >> "$GITHUB_OUTPUT"
+            echo "No release keystore configured — release build will fall back to debug signing."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > release.jks
+          cat > keystore.properties <<EOF
+          storeFile=release.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+          echo "has_key=true" >> "$GITHUB_OUTPUT"
+
+      - name: Assemble debug
+        run: ./gradlew --no-daemon --stacktrace assembleDebug
+
+      - name: Assemble release
+        run: ./gradlew --no-daemon --stacktrace assembleRelease
+
+      - name: Lint
+        run: ./gradlew --no-daemon lint
+        continue-on-error: true
+
+      - name: Verify that the APK really has no INTERNET permission
+        run: |
+          set -e
+          APK=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+          echo "checking $APK"
+          "$ANDROID_HOME"/build-tools/35.0.0/aapt2 dump permissions "$APK" > /tmp/perms.txt || \
+            "$ANDROID_HOME"/build-tools/35.0.0/aapt dump permissions "$APK" > /tmp/perms.txt
+          cat /tmp/perms.txt
+          if grep -q 'android.permission.INTERNET' /tmp/perms.txt; then
+            echo "::error::APK 声明了 INTERNET 权限，这违反了本项目的隐私约束"
+            exit 1
+          fi
+
+      - name: Clean up signing material
+        if: always()
+        run: rm -f release.jks keystore.properties
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: zhizhi-apk-${{ github.sha }}
+          path: app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+
+      - name: Attach APKs to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/release/*.apk
+          generate_release_notes: true
