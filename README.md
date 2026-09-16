@@ -262,8 +262,6 @@ app/src/main/java/app/zhizhi/
 
 全部功能免费，无内购、无广告、无会员。如果它确实帮到了你，可以请作者喝杯咖啡。
 
-应用「关于」页里有微信 / 支付宝收款码。想换成自己的收款码，
-替换 `app/src/main/res/drawable-nodpi/donation_wechat.png` 和 `donation_alipay.png` 即可。
 
 ## 许可证
 
