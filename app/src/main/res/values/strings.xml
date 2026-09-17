@@ -199,7 +199,7 @@
     <string name="stats_title">本地记录</string>
     <string name="stats_intro">这些数字只写在本机的一个文件里——没有数据库、没有云端，而应用连联网权限都没有，传不出去。清空即彻底删除。</string>
     <string name="stats_nudges">提醒次数</string>
-    <string name="stats_returned">拦回（选择退出）</string>
+    <string name="stats_returned">拦回</string>
     <string name="stats_snoozed">其中：选择再看一会儿</string>
     <string name="stats_grace">其中：选择正在做正事</string>
     <string name="stats_game_declined">其中：游戏前放弃</string>
@@ -323,4 +323,8 @@
     <string name="diag_refresh">刷新</string>
     <string name="diag_export_title">知止诊断</string>
     <string name="diag_copied">诊断已复制到剪贴板</string>
+    <string name="home_clock_format">格式设置</string>
+    <string name="home_clock_12">12 小时制</string>
+    <string name="home_clock_24">24 小时制</string>
+    <string name="home_service_auto_off">监测服务没能运行起来，已自动关闭总开关。常见原因：缺少「使用情况访问」或「悬浮窗」权限，或系统把后台服务清掉了。去「权限检查」逐项确认后，可以再把总开关打开。</string>
 </resources>

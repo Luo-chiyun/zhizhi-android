@@ -88,6 +88,8 @@ class SettingsRepository(
                 val d = MonitorSettings()
                 MonitorSettings(
                     masterEnabled = o.optBoolean("masterEnabled", d.masterEnabled),
+                    // 没有这个字段 = 用户没选过 = 继续跟随系统
+                    clock24h = if (o.has("clock24h")) o.optBoolean("clock24h") else null,
                     schedule = o.optJSONObject("schedule")?.let { s ->
                         Schedule(
                             enabled = s.optBoolean("enabled", d.schedule.enabled),
@@ -116,6 +118,8 @@ class SettingsRepository(
 
         internal fun encode(s: MonitorSettings): JSONObject = JSONObject().apply {
             put("masterEnabled", s.masterEnabled)
+            // 只在用户显式选过格式时才落盘；null 表示跟随系统，别把默认值写死进去
+            if (s.clock24h != null) put("clock24h", s.clock24h)
             put(
                 "schedule",
                 JSONObject().apply {

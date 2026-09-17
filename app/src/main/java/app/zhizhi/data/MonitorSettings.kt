@@ -37,8 +37,8 @@ data class Schedule(
     // 默认**关闭**时段限制：装完就按总开关全天监测。
     // enabled=false 时 contains() 恒为 true => 相当于"不限时段"。
     val enabled: Boolean = false,
-    val startMinute: Int = 20 * 60,
-    val endMinute: Int = 22 * 60,
+    val startMinute: Int = 7 * 60,
+    val endMinute: Int = 23 * 60,
 ) {
     /** minuteOfDay 落在时段内则返回 true。start == end 视为全天。跨午夜（如 22:00–02:00）同样成立。 */
     fun contains(minuteOfDay: Int): Boolean {
@@ -58,6 +58,14 @@ data class Schedule(
 
 data class MonitorSettings(
     val masterEnabled: Boolean = false,
+
+    /**
+     * 时间显示用 12 还是 24 小时制。
+     *
+     * `null` = 跟随系统（首次打开时按设备的 12/24 小时设置决定），
+     * 用户在「学习时段 → 格式设置」里选过之后就不再跟随，固定为他的选择。
+     */
+    val clock24h: Boolean? = null,
     val schedule: Schedule = Schedule.DEFAULT,
     /** 手动"暂时停止监测"的截止时间戳；0 表示未暂停 */
     val pausedUntilMs: Long = 0L,

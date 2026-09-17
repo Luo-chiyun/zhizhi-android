@@ -21,8 +21,8 @@ android {
         targetSdk = 35
         // 品牌改为「知止」并换上正式签名密钥之后，这是第一个对外发布的版本，
         // 所以版本号从 1.0.0 重新起算（之前 0.1.x 那串只是内部迭代）。
-        versionCode = 6
-        versionName = "1.0.5"
+        versionCode = 7
+        versionName = "1.0.6"
         resourceConfigurations += listOf("zh", "en")
         vectorDrawables { useSupportLibrary = true }
     }

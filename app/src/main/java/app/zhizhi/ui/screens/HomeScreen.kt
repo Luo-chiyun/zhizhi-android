@@ -1,6 +1,5 @@
 package app.zhizhi.ui.screens
 
-import android.app.TimePickerDialog
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,19 +10,21 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -43,7 +44,9 @@ import app.zhizhi.ui.components.FeatureTile
 import app.zhizhi.ui.components.HintBlock
 import app.zhizhi.ui.components.SectionHeader
 import app.zhizhi.ui.components.SliderRow
+import app.zhizhi.ui.components.SegmentedOption
 import app.zhizhi.ui.components.StatCard
+import app.zhizhi.ui.components.WheelTimePicker
 import app.zhizhi.ui.components.SwitchRow
 import app.zhizhi.ui.theme.ZhiZhiPalette
 import app.zhizhi.util.Permissions
@@ -52,7 +55,7 @@ import app.zhizhi.util.formatClock
 import app.zhizhi.util.formatCountdown
 import app.zhizhi.util.formatDuration
 import app.zhizhi.util.formatDurationTiny
-import app.zhizhi.util.hhmm
+import app.zhizhi.util.formatMinuteOfDay
 import app.zhizhi.util.minuteOfDayNow
 import app.zhizhi.util.todayKey
 import kotlinx.coroutines.delay
@@ -95,6 +98,26 @@ fun HomeScreen(
     // 只数真正会被提醒的应用。预设里"不用监测"的应用也会写进 overrides，
     // 直接用 overrides.size 会把它们算成"已选"，数字虚高。
     val monitoredCount = remember(overrides) { overrides.values.count { it.isMonitored } }
+
+    // 时间显示格式。用户没在「格式设置」里选过（clock24h == null）就跟随系统设置。
+    val system24 = remember { android.text.format.DateFormat.is24HourFormat(context) }
+    val use24Hour = settings.clock24h ?: system24
+
+    // 总开关开着、服务却不在跑 —— 说明它没能起来（权限不全、被系统清掉、启动被拦）。
+    // 先等一会儿再确认，免得刚打开开关、服务还在启动的那几百毫秒里被误判成失败。
+    var serviceAutoOff by remember { mutableStateOf(false) }
+    LaunchedEffect(settings.masterEnabled, running) {
+        if (!settings.masterEnabled || running) {
+            serviceAutoOff = false
+            return@LaunchedEffect
+        }
+        delay(SERVICE_START_GRACE_MS)
+        if (!MonitorService.running.value) {
+            serviceAutoOff = true
+            update { it.copy(masterEnabled = false) }
+            Graph.diagnostics.record("Service", "总开关开着但服务未在运行，已自动关闭总开关")
+        }
+    }
 
     val paused = settings.isPausedNow(now)
     val resting = settings.isResting(now)
@@ -179,6 +202,12 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.home_rest, settings.breakDurationMin)) }
             }
+        }
+
+        // 开关被自动关掉时要说清原因，否则用户只会看到"我明明开了、它自己关了"
+        if (serviceAutoOff) {
+            Spacer(Modifier.height(12.dp))
+            HintBlock(text = stringResource(R.string.home_service_auto_off))
         }
 
         // ------------------------------------------------------------ 三列统计
@@ -287,35 +316,58 @@ fun HomeScreen(
                 onChange = { on -> update { it.copy(schedule = it.schedule.copy(enabled = on)) } },
             )
             Spacer(Modifier.height(8.dp))
+
+            // ---- 格式设置：12 / 24 小时制 ----
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = stringResource(
-                        R.string.home_schedule_range,
-                        hhmm(settings.schedule.startMinute),
-                        hhmm(settings.schedule.endMinute),
-                    ),
-                    style = MaterialTheme.typography.bodyLarge,
+                    text = stringResource(R.string.home_clock_format),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
                 )
-                OutlinedButton(
-                    onClick = {
-                        pickTime(context, settings.schedule.startMinute) { minute ->
-                            update { it.copy(schedule = it.schedule.copy(startMinute = minute)) }
-                        }
-                    },
-                ) { Text(stringResource(R.string.home_schedule_start)) }
-                OutlinedButton(
-                    onClick = {
-                        pickTime(context, settings.schedule.endMinute) { minute ->
-                            update { it.copy(schedule = it.schedule.copy(endMinute = minute)) }
-                        }
-                    },
-                ) { Text(stringResource(R.string.home_schedule_end)) }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    SegmentedOption(
+                        text = stringResource(R.string.home_clock_12),
+                        selected = !use24Hour,
+                        onClick = { update { it.copy(clock24h = false) } },
+                    )
+                    SegmentedOption(
+                        text = stringResource(R.string.home_clock_24),
+                        selected = use24Hour,
+                        onClick = { update { it.copy(clock24h = true) } },
+                    )
+                }
             }
+
+            // ---- 当前时段，按所选格式显示 ----
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = stringResource(
+                    R.string.home_schedule_range,
+                    formatMinuteOfDay(settings.schedule.startMinute, use24Hour),
+                    formatMinuteOfDay(settings.schedule.endMinute, use24Hour),
+                ),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            // ---- 滚轮：上下滑动设置起止时间 ----
+            Spacer(Modifier.height(4.dp))
+            ScheduleWheelRow(
+                label = stringResource(R.string.home_schedule_start),
+                minuteOfDay = settings.schedule.startMinute,
+                use24Hour = use24Hour,
+                onChange = { m -> update { it.copy(schedule = it.schedule.copy(startMinute = m)) } },
+            )
+            ScheduleWheelRow(
+                label = stringResource(R.string.home_schedule_end),
+                minuteOfDay = settings.schedule.endMinute,
+                use24Hour = use24Hour,
+                onChange = { m -> update { it.copy(schedule = it.schedule.copy(endMinute = m)) } },
+            )
         }
 
         Spacer(Modifier.height(18.dp))
@@ -418,12 +470,32 @@ fun permissionSummary(context: Context): String {
     }
 }
 
-private fun pickTime(context: Context, minuteOfDay: Int, onPick: (Int) -> Unit) {
-    TimePickerDialog(
-        context,
-        { _, hour, minute -> onPick(hour * 60 + minute) },
-        minuteOfDay / 60,
-        minuteOfDay % 60,
-        true,
-    ).show()
+/** 学习时段用的一行转盘：左边标签，右边上下滑动的滚轮。 */
+@Composable
+private fun ScheduleWheelRow(
+    label: String,
+    minuteOfDay: Int,
+    use24Hour: Boolean,
+    onChange: (Int) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(44.dp),
+        )
+        WheelTimePicker(
+            minuteOfDay = minuteOfDay,
+            use24Hour = use24Hour,
+            onChange = onChange,
+            modifier = Modifier.weight(1f),
+        )
+    }
 }
+
+/** 打开总开关后，给服务留出的启动时间；超过它还没起来就认定失败。 */
+private const val SERVICE_START_GRACE_MS = 8_000L
