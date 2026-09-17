@@ -47,6 +47,7 @@ import app.zhizhi.ui.components.SliderRow
 import app.zhizhi.ui.components.SegmentedOption
 import app.zhizhi.ui.components.StatCard
 import app.zhizhi.ui.components.WheelTimePicker
+import app.zhizhi.ui.components.rememberWheelDragGuard
 import app.zhizhi.ui.components.SwitchRow
 import app.zhizhi.ui.theme.ZhiZhiPalette
 import app.zhizhi.util.Permissions
@@ -119,6 +120,11 @@ fun HomeScreen(
         }
     }
 
+    // 拖转盘时把首页的竖直滚动关掉。滚轮自己也会消费手势，这是第二道保险：
+    // 之前"滑时间滑到一半整页开始动"，根因就是两者在抢同一根手指的竖直拖动。
+    val (wheelDragging, setWheelDragging) = rememberWheelDragGuard()
+    val pageScroll = rememberScrollState()
+
     val paused = settings.isPausedNow(now)
     val resting = settings.isResting(now)
     val inWindow = settings.schedule.contains(minuteOfDayNow(now))
@@ -138,7 +144,7 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(pageScroll, enabled = !wheelDragging)
             .padding(horizontal = 16.dp),
     ) {
         Spacer(Modifier.height(12.dp))
@@ -360,12 +366,14 @@ fun HomeScreen(
                 label = stringResource(R.string.home_schedule_start),
                 minuteOfDay = settings.schedule.startMinute,
                 use24Hour = use24Hour,
+                onDraggingChange = setWheelDragging,
                 onChange = { m -> update { it.copy(schedule = it.schedule.copy(startMinute = m)) } },
             )
             ScheduleWheelRow(
                 label = stringResource(R.string.home_schedule_end),
                 minuteOfDay = settings.schedule.endMinute,
                 use24Hour = use24Hour,
+                onDraggingChange = setWheelDragging,
                 onChange = { m -> update { it.copy(schedule = it.schedule.copy(endMinute = m)) } },
             )
         }
@@ -476,6 +484,7 @@ private fun ScheduleWheelRow(
     label: String,
     minuteOfDay: Int,
     use24Hour: Boolean,
+    onDraggingChange: (Boolean) -> Unit,
     onChange: (Int) -> Unit,
 ) {
     Row(
@@ -493,6 +502,7 @@ private fun ScheduleWheelRow(
             use24Hour = use24Hour,
             onChange = onChange,
             modifier = Modifier.weight(1f),
+            onDraggingChange = onDraggingChange,
         )
     }
 }
