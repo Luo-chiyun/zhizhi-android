@@ -31,7 +31,7 @@
     <!-- ============ 首页（仪表盘） ============ -->
     <string name="home_greeting">知止不殆</string>
     <string name="home_state_running">监测进行中</string>
-    <string name="home_state_paused">已暂停</string>
+    <string name="home_state_service_off">监测未运行（服务没起来）</string>
     <string name="home_state_off">未开启</string>
     <string name="home_state_outside_schedule">当前不在学习时段</string>
     <string name="home_master_switch">总开关</string>
@@ -113,13 +113,13 @@
     <string name="advanced_break_hint">休息期间完全不监测、不提醒。到点会弹一张卡片，提示休息结束并问你要不要再来一会儿。</string>
     <string name="advanced_autostart">开机自动恢复监测</string>
     <string name="advanced_autostart_desc">默认关闭。权限不全会静默放弃，不弹任何东西。</string>
-    <string name="advanced_kill_target">退出后清掉该应用的后台</string>
-    <string name="advanced_kill_target_desc">Android 13 及以下有效。纯属顺手，失败也不影响退出。</string>
+    <string name="advanced_kill_target">退出后清掉该应用的后台进程</string>
+    <string name="advanced_kill_target_desc">只在你自己点了「退出」之后，清掉刚才那个应用的后台进程，免得它又被系统唤醒。默认关闭。Android 14 起系统禁止第三方应用做这件事，开关会自动禁用。</string>
     <string name="advanced_kill_target_unsupported">本机不支持：Android 14 起系统禁止第三方应用结束其他应用的进程（官方文档明确写了）。开关已禁用。</string>
     <string name="advanced_pause_hint">暂停是“安静地停一会儿，到期不叫你”——和「休息」相反，休息结束会弹卡片提醒你回来。</string>
 
     <!-- ============ 权限 ============ -->
-    <string name="perm_summary_ok">四项权限都已就绪</string>
+    <string name="perm_summary_ok">必需的两项权限都已就绪，其余两项可选也都开了</string>
     <string name="perm_summary_missing">还差 %1$d 项必需权限，补齐后监测才能真正起作用</string>
     <string name="perm_step_required">必需</string>
     <string name="perm_how_to">怎么做：%1$s</string>
@@ -135,19 +135,19 @@
     <string name="perm_show_all">显示全部机型</string>
     <string name="perm_path_hint">各家设置路径会随系统版本变化。找不到时，在系统设置里用搜索框搜「知止」或权限名，通常比一层层翻更快。</string>
     <string name="perm_extra_switch">有些机型还需要额外开关</string>
-    <string name="perm_title">权限说明</string>
+    <string name="perm_title">权限检查</string>
     <string name="perm_intro">知止没有联网权限，所有识别、计时、记录都只在这台设备上完成。下面每一项权限都只为一个明确用途服务，你可以随时在系统设置里收回。</string>
     <string name="perm_usage_title">使用情况访问</string>
     <string name="perm_usage_why">用途：读取“当前前台是哪个应用”。这是识别功能的唯一数据来源，不上传、不存储应用明细。</string>
     <string name="perm_overlay_title">悬浮窗</string>
     <string name="perm_overlay_why">用途：显示那句温和的提醒。同时它也是系统允许知止在后台持续运行的前提条件。</string>
     <string name="perm_notif_title">通知</string>
-    <string name="perm_notif_why">用途：仅用于前台服务的低调通知。拒绝也不影响主要功能。</string>
+    <string name="perm_notif_why">用途：前台服务的一条低调通知；另外在悬浮窗被系统拦截时，靠它把提醒降级成横幅，不至于让你什么都看不到。拒绝也不影响提醒卡片本身。</string>
     <string name="perm_notif_optional">可选</string>
     <string name="perm_battery_title">电池优化白名单</string>
     <string name="perm_battery_why">用途：避免系统在后台把监测服务杀掉。部分厂商系统还需要额外开关。</string>
     <string name="perm_oem_title">厂商后台限制</string>
-    <string name="perm_oem_why">在 %1$s 上，还需要在系统设置里允许“后台弹出界面”和“自启动”，否则提醒可能被拦截。</string>
+    <string name="perm_oem_why">在 %1$s 上，除了上面两项，通常还要再打开系统设置里的「后台弹出界面」和「自启动」，否则提醒可能被拦掉。</string>
     <string name="perm_oem_button">打开本机后台设置</string>
 
     <!-- ============ 分类 ============ -->
@@ -164,7 +164,7 @@
     <string name="cat_label_ignored">不监控</string>
     <string name="cat_label_entertainment">娱乐</string>
     <string name="cat_label_game">游戏</string>
-    <string name="cat_empty">列表为空。请确认已授予“使用情况访问”之外的应用可见性，或稍后重试。</string>
+    <string name="cat_empty">没能读到本机的应用列表。请稍后重试；如果一直是空的，可能是这台设备限制了应用列表的读取。</string>
 
     <!-- ============ 提醒卡片 ============ -->
     <string name="nudge_title">知止不殆。你进来时想做什么？</string>
@@ -197,19 +197,19 @@
 
     <!-- ============ 记录 ============ -->
     <string name="stats_title">本地记录</string>
-    <string name="stats_intro">这些数字只写在本机数据库里，没有网络权限可以把它传出去。清空即彻底删除。</string>
+    <string name="stats_intro">这些数字只写在本机的一个文件里——没有数据库、没有云端，而应用连联网权限都没有，传不出去。清空即彻底删除。</string>
     <string name="stats_nudges">提醒次数</string>
-    <string name="stats_returned">选择退出</string>
-    <string name="stats_snoozed">选择再看一会儿</string>
-    <string name="stats_grace">选择正在做正事</string>
-    <string name="stats_game_declined">游戏前放弃</string>
+    <string name="stats_returned">拦回（选择退出）</string>
+    <string name="stats_snoozed">其中：选择再看一会儿</string>
+    <string name="stats_grace">其中：选择正在做正事</string>
+    <string name="stats_game_declined">其中：游戏前放弃</string>
     <string name="stats_monitored">累计监测时长</string>
     <string name="stats_clear">清空全部记录</string>
     <string name="stats_clear_confirm">确定清空？此操作不可恢复。</string>
     <string name="stats_empty">还没有记录。</string>
     <string name="stats_exit_probe">“一键回到桌面”成功 / 尝试次数</string>
     <string name="stats_overlay">提醒卡片实际显示 / 降级为通知</string>
-    <string name="stats_muted">选择“别再提醒这个应用”</string>
+    <string name="stats_muted">其中：选择「别再提醒这个应用」</string>
 
     <!-- ============ 关于 ============ -->
     <string name="about_title">关于</string>
@@ -261,7 +261,7 @@
     <string name="diag_anchor">锚点窗口可见</string>
     <string name="diag_service_running">服务运行中</string>
     <string name="diag_alert_channel">提醒通道（横幅）</string>
-    <string name="diag_alert_warning">降级通知现在弹不出横幅，只会变成通知栏里一条安静记录。系统设置 → 通知与状态栏 → 应用通知管理 → 知止，把「知止 · 提醒（降级通道）」的横幅打开，并确认它没有被归到“静默通知”。</string>
+    <string name="diag_alert_warning">降级通知现在弹不出横幅，只会变成通知栏里一条安静记录。系统设置 → 通知与状态栏 → 应用通知管理 → 知止，把「知止 · 提醒（降级通道）」的横幅打开，并确认它没有被归到「静默通知」。</string>
     <string name="diag_toggles_title">卡片的“一票否决”开关（按顺序查一遍）</string>
     <string name="diag_toggles_body">1. 设置 → 应用管理 → 知止 → 权限 → 悬浮窗：必须开。\n2. 设置 → 通知与状态栏 → 应用通知管理 → 知止：允许通知 + 允许横幅，且不要被分到“静默通知”。\n3. 设置 → 电池 → 应用耗电管理 → 知止：允许完全后台行为 / 后台弹出界面。\n4. 不要在「游戏空间」「免打扰」「省电模式」生效时测试——这些会按设计拦掉悬浮窗和横幅。</string>
     <string name="diag_live_title">活体指标</string>
@@ -286,8 +286,41 @@
 
     <!-- ============ 引导 ============ -->
     <string name="onboard_welcome">知止不殆</string>
-    <string name="onboard_p1">“知止”取自《道德经》：“知足不辱，知止不殆，可以长久。”知道适可而止，就不会遇到危险。</string>
-    <string name="onboard_p2">这个工具不做强制锁机，屏幕上不会有常驻计时器，也不会替你把应用关掉。它只做一件事：在你可能走神的时候，问一句“你进来时想做什么”。答案永远由你给。</string>
+    <string name="onboard_p1">“知止”取自《道德经·第四十四章》：“知足不辱，知止不殆，可以长久。”知道适可而止，就不会遇到危险。</string>
+    <string name="onboard_p2">这个工具不锁机，屏幕上不会有常驻计时器，也不会拦着你不让打开某个应用。它只做一件事：在你可能走神的时候，问一句“你进来时想做什么”。想继续就继续，它不替你做决定。</string>
     <string name="onboard_p3">先花一分钟把权限和名单设置好，之后它就会安静地待在后台。</string>
     <string name="onboard_start">开始设置</string>
+
+    <!-- ============ 补充 ============ -->
+    <string name="perm_summary_optional_missing">必需的两项已就绪；另有 %1$d 项可选项没开（不影响监测）</string>
+    <string name="home_perm_ok">权限齐全</string>
+    <string name="home_perm_missing">缺少：%1$s</string>
+    <string name="home_date_pattern" translatable="false">M 月 d 日 EEEE</string>
+    <string name="home_no_apps_hint">还没有选任何要监测的应用。点下面的「监控哪些应用」勾上几个，否则不会产生任何提醒。</string>
+    <string name="onboard_swipe_hint">左右滑动可以翻页</string>
+    <string name="stats_game_confirmed">其中：游戏前同意进入</string>
+    <string name="perm_current_device">当前识别到的机型：%1$s</string>
+    <string name="perm_refresh">刷新状态</string>
+    <string name="confirm">确定</string>
+    <string name="common_minutes">分钟</string>
+    <string name="diag_bool_yes">是</string>
+    <string name="diag_bool_no">否</string>
+    <string name="diag_system">系统</string>
+    <string name="diag_model">机型</string>
+    <string name="diag_total_unit">%1$d 条</string>
+    <string name="cat_loading">正在读取本机应用列表…</string>
+    <string name="perm_primary_done">完成，开始使用</string>
+    <string name="perm_primary_back">好，返回</string>
+    <string name="slider_input_hint">可直接输入，范围 %1$d – %2$d %3$s</string>
+
+    <string name="perm_required_ready">必需的两项权限已就绪（%1$d/2）</string>
+    <string name="stats_range_7">近 7 天</string>
+    <string name="stats_range_30">近 30 天</string>
+    <string name="stats_detail">明细</string>
+    <string name="stats_daily">逐日</string>
+    <string name="stats_count_unit">%1$d 次</string>
+    <string name="stats_exit_never">「一键回到桌面」在本机从未生效过。卡片按钮本身仍然有效，只是自动退出需要你手动点。</string>
+    <string name="diag_refresh">刷新</string>
+    <string name="diag_export_title">知止诊断</string>
+    <string name="diag_copied">诊断已复制到剪贴板</string>
 </resources>

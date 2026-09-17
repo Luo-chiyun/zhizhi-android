@@ -1,16 +1,17 @@
 package app.zhizhi.data
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 data class DayStats(
@@ -43,9 +44,29 @@ class StatsStore(
 ) {
     private val ds = context.focusDataStore
 
-    val days: StateFlow<Map<String, DayStats>> = ds.data
-        .map { decode(it[KEY_DAYS]) }
-        .stateIn(scope, SharingStarted.Eagerly, emptyMap())
+    private val _days = MutableStateFlow<Map<String, DayStats>>(emptyMap())
+
+    /** 首页与记录页观察它。 */
+    val days: StateFlow<Map<String, DayStats>> = _days
+
+    init {
+        // 这里刻意**不用** `stateIn(scope, Eagerly, emptyMap())`。
+        //
+        // DataStore 的 data 流在读写失败时会抛异常并把上游结束掉，而 stateIn 之后
+        // 得到的 StateFlow 只会**冻结在最后一个值**上：不报错、不重试，界面从此不再更新。
+        // 表现出来就是"仪表盘的数据不刷新"，而且现场什么线索都没有。
+        // 自己接管这个循环，断了就重连。
+        scope.launch {
+            while (true) {
+                runCatching {
+                    ds.data.collect { prefs -> _days.value = decode(prefs[KEY_DAYS]) }
+                }.onFailure { error ->
+                    Log.w("ZhiZhi", "统计流中断，1 秒后重连", error)
+                }
+                delay(1_000L)
+            }
+        }
+    }
 
     suspend fun bump(block: (DayStats) -> DayStats) {
         val today = todayKey()

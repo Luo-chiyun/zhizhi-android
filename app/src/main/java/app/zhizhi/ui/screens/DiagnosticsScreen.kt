@@ -94,7 +94,7 @@ fun DiagnosticsScreen() {
         CardSection(
             title = stringResource(R.string.diag_live_title),
             trailing = {
-                TextButton(onClick = { refreshKey += 1 }) { Text("刷新") }
+                TextButton(onClick = { refreshKey += 1 }) { Text(stringResource(R.string.diag_refresh)) }
             },
         ) {
             Text(
@@ -105,7 +105,10 @@ fun DiagnosticsScreen() {
             )
             ValueRow(stringResource(R.string.diag_live_heartbeat), heartbeat.toString())
             ValueRow(stringResource(R.string.diag_live_state), loopState)
-            ValueRow(stringResource(R.string.diag_live_total), totalRecorded.toString() + " 条")
+            ValueRow(
+                stringResource(R.string.diag_live_total),
+                stringResource(R.string.diag_total_unit, totalRecorded),
+            )
         }
 
         // ---------------------------------------------------------- 环境
@@ -116,8 +119,8 @@ fun DiagnosticsScreen() {
                 stringResource(R.string.diag_version),
                 BuildConfig.VERSION_NAME + "（" + BuildConfig.VERSION_CODE + "）",
             )
-            ValueRow("系统", "Android " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")")
-            ValueRow("机型", Build.MANUFACTURER + " " + Build.MODEL)
+            ValueRow(stringResource(R.string.diag_system), "Android " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")")
+            ValueRow(stringResource(R.string.diag_model), Build.MANUFACTURER + " " + Build.MODEL)
             ValueRow(stringResource(R.string.diag_overlay_perm), boolText(overlayPermission))
             ValueRow(stringResource(R.string.diag_usage_perm), boolText(usagePermission))
             ValueRow(stringResource(R.string.diag_notif_perm), boolText(notification))
@@ -218,10 +221,13 @@ fun DiagnosticsScreen() {
 
         // ---------------------------------------------------------- 导出
         Spacer(Modifier.height(16.dp))
+        // 文案在这里取好：onClick 是普通闭包，不在 Compose 作用域里，
+        // 里面直接调 stringResource 编译不过。
+        val copiedToast = stringResource(R.string.diag_copied)
         Button(
             onClick = {
                 copyToClipboard(context, Graph.diagnostics.dumpText())
-                Toast.makeText(context, "诊断已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, copiedToast, Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier.fillMaxWidth(),
         ) { Text(stringResource(R.string.diag_copy_button)) }
@@ -250,8 +256,10 @@ fun DiagnosticsScreen() {
 private fun copyToClipboard(context: Context, text: String) {
     runCatching {
         val manager = context.getSystemService(ClipboardManager::class.java) ?: return
-        manager.setPrimaryClip(ClipData.newPlainText("知止诊断", text))
+        manager.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.diag_export_title), text))
     }
 }
 
-private fun boolText(value: Boolean): String = if (value) "是" else "否"
+@Composable
+private fun boolText(value: Boolean): String =
+    if (value) stringResource(R.string.diag_bool_yes) else stringResource(R.string.diag_bool_no)

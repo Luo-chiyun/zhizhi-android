@@ -109,6 +109,7 @@ fun PermissionsScreen(
     )
     val granted = listOf(usageGranted, overlayGranted, notifGranted, batteryOk)
     val missingRequired = listOf(0, 1).filter { !granted[it] }
+    val missingOptional = listOf(2, 3).filter { !granted[it] }
     val requiredGranted = 2 - missingRequired.size
 
     Column(
@@ -120,10 +121,14 @@ fun PermissionsScreen(
         Spacer(Modifier.height(16.dp))
 
         HintBlock(
-            text = if (missingRequired.isEmpty()) {
-                stringResource(R.string.perm_summary_ok)
-            } else {
-                stringResource(R.string.perm_summary_missing, missingRequired.size)
+            text = when {
+                // 顺序要紧：必需项缺了就说必需项的事；必需项齐了但可选项没开，
+                // 不能再显示"四项权限都已就绪"——那是一句会当场被用户拆穿的话。
+                missingRequired.isNotEmpty() ->
+                    stringResource(R.string.perm_summary_missing, missingRequired.size)
+                missingOptional.isNotEmpty() ->
+                    stringResource(R.string.perm_summary_optional_missing, missingOptional.size)
+                else -> stringResource(R.string.perm_summary_ok)
             },
         )
         Spacer(Modifier.height(10.dp))
@@ -138,7 +143,7 @@ fun PermissionsScreen(
         ZhiZhiCard {
             Column(Modifier.padding(14.dp)) {
                 Text(
-                    text = "当前识别到的机型：${myGuide.label}",
+                    text = stringResource(R.string.perm_current_device, myGuide.label),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -237,7 +242,7 @@ fun PermissionsScreen(
             Spacer(Modifier.height(8.dp))
         } else {
             Text(
-                text = "必需权限（$requiredGranted/2）已就绪。",
+                text = stringResource(R.string.perm_required_ready, requiredGranted),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.fillMaxWidth(),
@@ -250,7 +255,7 @@ fun PermissionsScreen(
         }
         Spacer(Modifier.height(6.dp))
         OutlinedButton(onClick = { refresh() }, modifier = Modifier.fillMaxWidth()) {
-            Text("刷新状态")
+            Text(stringResource(R.string.perm_refresh))
         }
         Spacer(Modifier.height(24.dp))
     }

@@ -128,7 +128,7 @@ fun CategoryScreen() {
 
         val list = installed
         if (list == null) {
-            Text("正在读取本机应用列表…", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.cat_loading), style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.weight(1f))
         } else {
             val visible = list.filter { entry ->

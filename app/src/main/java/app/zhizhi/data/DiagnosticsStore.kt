@@ -157,7 +157,7 @@ class DiagnosticsStore(
         /** logcat 里一条命令就能抓全部本应用的关键事件。 */
         const val LOGCAT_TAG = "ZhiZhi"
 
-        const val HEADER_TITLE = "专注守门 诊断导出"
+        const val HEADER_TITLE = "知止 诊断导出"
 
         /** 内存里保留的事件条数。这一层是权威，UI 和导出都读它。 */
         const val MAX_EVENTS = 1000

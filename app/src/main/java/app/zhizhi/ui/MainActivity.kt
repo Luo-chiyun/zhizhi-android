@@ -129,7 +129,7 @@ private fun AppRoot() {
                 TopBar(title = stringResource(R.string.perm_title))
                 Box(Modifier.weight(1f)) {
                     PermissionsScreen(
-                        primaryLabel = "完成，开始使用",
+                        primaryLabel = stringResource(R.string.perm_primary_done),
                         onPrimary = {
                             scope.launch { Graph.settings.edit { it.copy(onboardingDone = true) } }
                             introName = Intro.Done.name
@@ -167,7 +167,7 @@ private fun AppRoot() {
                         Page.Break -> BreakScreen()
                         Page.Diagnostics -> DiagnosticsScreen()
                         Page.Permissions -> PermissionsScreen(
-                            primaryLabel = "好，返回",
+                            primaryLabel = stringResource(R.string.perm_primary_back),
                             onPrimary = { pop() },
                         )
 

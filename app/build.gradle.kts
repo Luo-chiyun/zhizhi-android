@@ -21,8 +21,8 @@ android {
         targetSdk = 35
         // 品牌改为「知止」并换上正式签名密钥之后，这是第一个对外发布的版本，
         // 所以版本号从 1.0.0 重新起算（之前 0.1.x 那串只是内部迭代）。
-        versionCode = 5
-        versionName = "1.0.4"
+        versionCode = 6
+        versionName = "1.0.5"
         resourceConfigurations += listOf("zh", "en")
         vectorDrawables { useSupportLibrary = true }
     }
@@ -116,6 +116,9 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    // 引导页的左右翻页用 HorizontalPager。material3 会传递引入 foundation，
+    // 但显式声明更稳妥，别依赖传递依赖。
+    implementation("androidx.compose.foundation:foundation")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

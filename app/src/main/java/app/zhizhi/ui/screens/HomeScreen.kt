@@ -28,6 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -102,7 +105,7 @@ fun HomeScreen(
         paused -> stringResource(R.string.home_paused_until, formatClock(settings.pausedUntilMs))
         !inWindow -> stringResource(R.string.home_state_outside_schedule)
         running -> stringResource(R.string.home_state_running)
-        else -> stringResource(R.string.home_state_paused)
+        else -> stringResource(R.string.home_state_service_off)
     }
 
     val today = days[todayKey()] ?: app.zhizhi.data.DayStats()
@@ -119,7 +122,7 @@ fun HomeScreen(
 
         // ------------------------------------------------------------ 头部
         Text(
-            text = currentDateText(),
+            text = currentDateText(stringResource(R.string.home_date_pattern)),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -215,6 +218,14 @@ fun HomeScreen(
                 ),
                 modifier = Modifier.weight(1f).fillMaxHeight(),
             )
+        }
+
+        // ------------------------------------------------------------ 一个应用都没选时的提示
+        // 总开关开着、但一个应用都没勾，界面上会出现三个 0，看起来像"坏了"。
+        // 实际原因是没有任何目标可监测——不提示的话，用户会以为统计不准。
+        if (settings.masterEnabled && monitoredCount == 0) {
+            Spacer(Modifier.height(12.dp))
+            HintBlock(text = stringResource(R.string.home_no_apps_hint))
         }
 
         // ------------------------------------------------------------ 功能模块
@@ -357,9 +368,8 @@ private fun FeatureGrid(tiles: List<Triple<Int, Pair<String, String>, () -> Unit
     }
 }
 
-private fun currentDateText(): String =
-    java.text.SimpleDateFormat("M 月 d 日 EEEE", java.util.Locale.CHINA)
-        .format(java.util.Date())
+private fun currentDateText(pattern: String): String =
+    SimpleDateFormat(pattern, Locale.CHINA).format(Date())
 
 /**
  * 趋势文案与颜色。
@@ -367,15 +377,19 @@ private fun currentDateText(): String =
  * 颜色刻意带上产品判断：提醒次数下降 = 好事（绿），上升 = 需要注意（橙）。
  * 这和模板里 "+12% 绿 / 持平 橙" 的取向不同，但对这个工具才是有意义的。
  */
+@Composable
 private fun trendText(current: Int, previous: Int?, hasPrevious: Boolean): String? {
     // 没有昨天的数据就**整行不显示**。原来这里显示"今天开始记录"，
     // 结果只有前两张卡有第三行、监测卡没有，三张卡被撑成一高一低。
+    //
+    // 文案走 strings.xml：这三句原来在代码里硬写，而资源文件里同样三条
+    // （stat_trend_up / down / flat）一直没人用——两处会各自漂移。
     if (!hasPrevious || previous == null) return null
     val diff = current - previous
     return when {
-        diff > 0 -> "较昨日 +$diff"
-        diff < 0 -> "较昨日 −${-diff}"
-        else -> "与昨日持平"
+        diff > 0 -> stringResource(R.string.stat_trend_up, diff)
+        diff < 0 -> stringResource(R.string.stat_trend_down, -diff)
+        else -> stringResource(R.string.stat_trend_flat)
     }
 }
 
@@ -390,12 +404,18 @@ private fun trendColor(current: Int, previous: Int?, hasPrevious: Boolean): Colo
     }
 }
 
+@Composable
 fun permissionSummary(context: Context): String {
-    val missing = buildList {
-        if (!Permissions.hasUsageAccess(context)) add("使用情况访问")
-        if (!Permissions.canDrawOverlays(context)) add("悬浮窗")
+    val usage = Permissions.hasUsageAccess(context)
+    val overlay = Permissions.canDrawOverlays(context)
+    val usageLabel = stringResource(R.string.perm_usage_title)
+    val overlayLabel = stringResource(R.string.perm_overlay_title)
+    return when {
+        usage && overlay -> stringResource(R.string.home_perm_ok)
+        !usage && !overlay -> stringResource(R.string.home_perm_missing, "$usageLabel、$overlayLabel")
+        !usage -> stringResource(R.string.home_perm_missing, usageLabel)
+        else -> stringResource(R.string.home_perm_missing, overlayLabel)
     }
-    return if (missing.isEmpty()) "权限齐全" else "缺少：" + missing.joinToString("、")
 }
 
 private fun pickTime(context: Context, minuteOfDay: Int, onPick: (Int) -> Unit) {

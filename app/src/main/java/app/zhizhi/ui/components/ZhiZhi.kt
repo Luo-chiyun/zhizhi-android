@@ -104,7 +104,7 @@ fun TopBar(title: String, onBack: (() -> Unit)? = null) {
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_z_back),
-                        contentDescription = "返回",
+                        contentDescription = stringResource(R.string.back),
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(18.dp),
                     )
@@ -309,10 +309,11 @@ fun SliderRow(
     format: @Composable (Float) -> String,
     onCommit: (Float) -> Unit,
     subtitle: String? = null,
-    unitHint: String = "分钟",
+    unitHint: String? = null,
 ) {
     var local by remember(value) { mutableStateOf(value) }
     var editing by remember { mutableStateOf(false) }
+    val unit = unitHint ?: stringResource(R.string.common_minutes)
 
     Column(Modifier.padding(vertical = 6.dp)) {
         Row(
@@ -374,14 +375,18 @@ fun SliderRow(
                         value = draft,
                         onValueChange = { text -> draft = text.filter { it.isDigit() }.take(4) },
                         singleLine = true,
-                        suffix = { Text(unitHint, style = MaterialTheme.typography.bodySmall) },
+                        suffix = { Text(unit, style = MaterialTheme.typography.bodySmall) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "可直接输入，范围 " + range.start.roundToInt() + " – " +
-                            range.endInclusive.roundToInt() + " " + unitHint,
+                        text = stringResource(
+                            R.string.slider_input_hint,
+                            range.start.roundToInt(),
+                            range.endInclusive.roundToInt(),
+                            unit,
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -395,10 +400,10 @@ fun SliderRow(
                         onCommit(clamped)
                     }
                     editing = false
-                }) { Text("确定") }
+                }) { Text(stringResource(R.string.confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { editing = false }) { Text("取消") }
+                TextButton(onClick = { editing = false }) { Text(stringResource(R.string.cancel)) }
             },
         )
     }

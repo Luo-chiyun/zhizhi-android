@@ -140,7 +140,7 @@ class MonitorService : Service() {
             diagnostics.record(
                 "Service",
                 "警告：提醒通道被降到了「${channel.importanceText()}」，横幅通知不会出现。" +
-                    "请在系统通知设置里把「专注守门 → 提醒（降级通道）」设为允许横幅。",
+                    "请在系统通知设置里把「知止 → 提醒（降级通道）」设为允许横幅。",
             )
         }
     }
@@ -401,10 +401,24 @@ class MonitorService : Service() {
         accumTrackedMs = 0L
     }
 
-    /** 累计的监测时长每满一分钟落一次盘，避免频繁写 DataStore。 */
+    /**
+     * 累计的监测时长落盘。
+     *
+     * 两条规则：
+     *  1. 会话还在进行：每满 [FLUSH_THRESHOLD_MS] 落一次盘，避免频繁写 DataStore。
+     *  2. 会话已经结束：**把余数也写下去**。
+     *
+     * 第 2 条是必须的。原来在会话结束时直接 `accumTrackedMs = 0L`，
+     * 于是一次 40 秒的停留（典型的"打开游戏 → 被问一次 → 退出"）被整段丢掉，
+     * 首页那张「监测」卡永远显示 0 —— 用户看到的就是"我明明被拦了，怎么什么都没记上"。
+     */
     private fun flushTrackedTime() {
-        if (accumTrackedMs < FLUSH_THRESHOLD_MS) {
-            if (!policy.isTracking()) accumTrackedMs = 0L
+        if (accumTrackedMs <= 0L) return
+        if (policy.isTracking()) {
+            if (accumTrackedMs < FLUSH_THRESHOLD_MS) return
+        } else if (accumTrackedMs < MIN_FLUSH_MS) {
+            // 不足 1 秒的零头不值得写盘
+            accumTrackedMs = 0L
             return
         }
         val amount = accumTrackedMs
@@ -435,6 +449,10 @@ class MonitorService : Service() {
             is OverlayAction.ShowGameConfirm -> {
                 diagnostics.record("Game", "游戏前确认 app=${action.appLabel} pkg=${action.packageName}")
                 presentCard(CardSpec.GameConfirm(action.appLabel), atBottom = settings.cardAtBottom)
+                // 这张卡也是一次提醒，必须计入 nudges。
+                // 否则"只在游戏里活动"的那天，首页「今日提醒」会一直显示 0，
+                // 用户明明被问了两次，仪表盘却说无事发生。
+                bump { it.copy(nudges = it.nudges + 1) }
             }
 
             OverlayAction.ShowBreakOver -> {
@@ -583,7 +601,11 @@ class MonitorService : Service() {
 
             NudgeAnswer.GAME_ENTER -> bump { it.copy(gameConfirm = it.gameConfirm + 1) }
 
-            NudgeAnswer.GAME_CANCEL -> bump { it.copy(gameDeclined = it.gameDeclined + 1) }
+            // 用户点了「算了，退出」。这既是一次"游戏前放弃"，也是一次实实在在的"被拦回来"，
+            // 所以要同时计进 returned —— 首页那张「拦回」卡统计的就是这个。
+            NudgeAnswer.GAME_CANCEL -> bump {
+                it.copy(returned = it.returned + 1, gameDeclined = it.gameDeclined + 1)
+            }
 
             NudgeAnswer.MUTE_APP -> {
                 bump { it.copy(mutedApps = it.mutedApps + 1) }
@@ -785,6 +807,9 @@ class MonitorService : Service() {
         private const val SCREEN_SYNC_INTERVAL_MS = 5_000L
 
         private const val FLUSH_THRESHOLD_MS = 60_000L
+
+        /** 会话结束时不足这个量的零头不写盘。 */
+        private const val MIN_FLUSH_MS = 1_000L
         private const val HOME_VERIFY_DELAY_MS = 1_500L
         const val PAUSE_STEP_MS = 30 * 60_000L
 

@@ -54,6 +54,7 @@ fun StatsScreen() {
     val snoozed = recent.sumOf { it.value.snoozed }
     val grace = recent.sumOf { it.value.grace }
     val declined = recent.sumOf { it.value.gameDeclined }
+    val gameConfirmed = recent.sumOf { it.value.gameConfirm }
     val muted = recent.sumOf { it.value.mutedApps }
     val monitored = recent.sumOf { it.value.monitoredMs }
     val exitAttempts = recent.sumOf { it.value.exitAttempts }
@@ -82,8 +83,8 @@ fun StatsScreen() {
 
         Spacer(Modifier.height(14.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SegmentedOption("近 7 天", windowDays == 7) { windowDays = 7 }
-            SegmentedOption("近 30 天", windowDays == 30) { windowDays = 30 }
+            SegmentedOption(stringResource(R.string.stats_range_7), windowDays == 7) { windowDays = 7 }
+            SegmentedOption(stringResource(R.string.stats_range_30), windowDays == 30) { windowDays = 30 }
         }
 
         Spacer(Modifier.height(14.dp))
@@ -106,9 +107,10 @@ fun StatsScreen() {
         }
 
         Spacer(Modifier.height(18.dp))
-        CardSection(title = "明细") {
+        CardSection(title = stringResource(R.string.stats_detail)) {
             ValueRow(stringResource(R.string.stats_snoozed), snoozed.toString())
             ValueRow(stringResource(R.string.stats_grace), grace.toString())
+            ValueRow(stringResource(R.string.stats_game_confirmed), gameConfirmed.toString())
             ValueRow(stringResource(R.string.stats_game_declined), declined.toString())
             ValueRow(stringResource(R.string.stats_muted), muted.toString())
             ValueRow(stringResource(R.string.stats_exit_probe), exitSuccess.toString() + " / " + exitAttempts)
@@ -118,7 +120,7 @@ fun StatsScreen() {
         if (exitAttempts > 0 && exitSuccess == 0) {
             Spacer(Modifier.height(12.dp))
             Text(
-                text = "「一键回到桌面」在本机从未生效过。卡片按钮本身仍然有效，只是自动退出需要你手动点。",
+                text = stringResource(R.string.stats_exit_never),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
             )
@@ -132,11 +134,12 @@ fun StatsScreen() {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
-            CardSection(title = "逐日") {
+            CardSection(title = stringResource(R.string.stats_daily)) {
                 recent.forEach { entry ->
                     ValueRow(
                         entry.key,
-                        entry.value.nudges.toString() + " 次 · " + formatDuration(entry.value.monitoredMs),
+                        stringResource(R.string.stats_count_unit, entry.value.nudges) + " · " +
+                            formatDuration(entry.value.monitoredMs),
                     )
                 }
             }
