@@ -194,10 +194,24 @@ jobs:
       # "Not Found - update-a-release-asset" 的竞态。
       - name: 创建或更新 Release
         env:
+          # 这个 job **没有 checkout**，工作目录里没有 .git，gh 没法从 git remote 推断仓库，
+          # 会直接 "failed to run git: fatal: not a git repository" 然后退出码 1。
+          # （本地复现过：只加 GH_REPO，错误就从 git 推断失败变成 401，说明仓库已定位。）
+          GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -e
+          set -euo pipefail
           TAG="$GITHUB_REF_NAME"
+          echo "仓库=$GH_REPO  标签=$TAG"
+          gh --version | head -1
+          if [ -z "${ASSET:-}" ]; then
+            echo "::error::没拿到附件名——上一步写 GITHUB_ENV 没生效？当前目录："
+            ls -la
+            exit 1
+          fi
+          echo "附件=$ASSET"
+          ls -la
+
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG 已存在，覆盖附件。"
             gh release upload "$TAG" "$ASSET" --clobber
@@ -206,5 +220,6 @@ jobs:
               --title "知止 ${TAG#v}" \
               --generate-notes
           fi
+
           echo "---- Release 附件 ----"
-          gh release view "$TAG" --json assets --jq '.assets[].name'
+          gh release view "$TAG" --json assets --jq '.assets[] | "\(.name)  \(.size) 字节"'

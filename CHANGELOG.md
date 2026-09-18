@@ -48,7 +48,24 @@ keytool 报告: Keystore type: PKCS12
 * `actions/setup-java@v4` → `@v5`（官方已在日志里提示 v4 弃用）。其余 action 只是
   "目标 Node 20、被强制跑在 Node 24" 的提示，能正常工作，不动。
 
+### 又一处 CI 问题：发布步骤缺仓库定位
+
+签名修好之后，`release` job 的「创建或更新 Release」接着挂了（退出码 1）。原因是**这个 job 里没有
+`checkout`**，工作目录里没有 `.git`，而 `gh` 是靠 git remote 推断"该往哪个仓库发"的——
+猜不到就直接退出：
+
+```
+failed to run git: fatal: not a git repository (or any of the parent directories): .git
+```
+
+本地复现过：只把仓库名显式给它，错误立刻从"git 推断失败"变成 `HTTP 401`（说明仓库已定位，
+只剩认证问题），所以这条诊断是确定的。
+
+修法：在该步骤声明 `GH_REPO: ${{ github.repository }}`，并补上自诊断
+（打印 gh 版本、仓库、标签、附件名与目录内容，缺附件名时直接给出明确报错）。
+
 > **本版 APK 的行为与 1.0.7 完全一致**，只涉及构建脚本与 CI。之所以照样升版本号，
+> 是因为源码变了——发布的 APK 和仓库里的源码必须严格对应，否则用户没法对照复核。之所以照样升版本号，
 > 是因为源码变了——发布的 APK 和仓库里的源码必须严格对应，否则用户没法对照复核。
 
 
