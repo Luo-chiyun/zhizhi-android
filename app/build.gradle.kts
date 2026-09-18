@@ -21,8 +21,8 @@ android {
         targetSdk = 35
         // 品牌改为「知止」并换上正式签名密钥之后，这是第一个对外发布的版本，
         // 所以版本号从 1.0.0 重新起算（之前 0.1.x 那串只是内部迭代）。
-        versionCode = 8
-        versionName = "1.0.7"
+        versionCode = 9
+        versionName = "1.0.8"
         resourceConfigurations += listOf("zh", "en")
         vectorDrawables { useSupportLibrary = true }
     }
@@ -37,6 +37,11 @@ android {
                 storePassword = props.getProperty("storePassword")
                 keyAlias = props.getProperty("keyAlias")
                 keyPassword = props.getProperty("keyPassword")
+                // 密钥库类型显式写出来（可选）。
+                // 不写也能用——Java 会按内容自动识别；但从 JDK 9 起 keytool **默认生成 PKCS12**，
+                // 而这个文件名是 .jks，两者对不上时排查起来很费劲。CI 会用 keytool 把真实类型
+                // 读出来写进 keystore.properties，这样日志里就有一行明确的答案。
+                props.getProperty("storeType")?.takeIf { it.isNotBlank() }?.let { storeType = it }
             }
         }
     }

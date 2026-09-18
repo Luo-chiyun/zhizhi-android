@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -47,17 +47,50 @@ jobs:
             echo "::warning::没有配置正式签名密钥，release 包会用 debug 签名，**不能发给用户**。"
             exit 0
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > release.jks
-          # JKS 的魔数是 FE ED FE ED，用来挡住"粘错东西"这种最常见的错误
-          if ! head -c 4 release.jks | xxd -p | grep -q '^feedfeed$'; then
-            echo "::error::KEYSTORE_BASE64 解码后不是有效的 JKS。检查是不是把整个文件转成了 base64（base64 -w0 zhizhi-release.jks）。"
+
+          # 从 secret 里粘贴过来的 base64 常带换行/回车/空格（在 Windows 上生成的尤其如此），
+          # 先全清掉再解码，否则解出来的是坏文件。
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > release.jks
+          if [ ! -s release.jks ]; then
+            echo "::error::KEYSTORE_BASE64 解码后是空文件。secret 里应该是一整行 base64（base64 -w0 的输出）。"
             exit 1
           fi
+
+          # 直接让 keytool 打开它 —— 比猜文件头的魔数靠谱得多，而且一次把
+          # "文件对不对""密码对不对""别名在不在"全验完。
+          #
+          # 曾经这里写的是 `head -c 4 | xxd | grep '^feedfeed$'`（JKS 的魔数），
+          # 结果把好密钥判成了坏的：JDK 9 起 keytool **默认生成 PKCS12**，
+          # 本项目这个 zhizhi-release.jks 就是 PKCS12（开头是 3082…不是 feedfeed）。
+          # 扩展名和真实格式对不上是很常见的，所以不要靠扩展名或魔数判断。
+          loaded=""
+          for extra in "" "-storetype PKCS12" "-storetype JKS"; do
+            if keytool -list -keystore release.jks -storepass "$KEYSTORE_PASSWORD" $extra > /tmp/ks.txt 2>&1; then
+              loaded="$extra"
+              break
+            fi
+          done
+          if [ -z "$loaded" ] && ! grep -q "Keystore type" /tmp/ks.txt 2>/dev/null; then
+            cat /tmp/ks.txt || true
+            echo "::error::打不开这个 keystore：base64 内容不对，或 KEYSTORE_PASSWORD 不对。"
+            exit 1
+          fi
+          grep -E "Keystore type|Your keystore contains" /tmp/ks.txt || true
+          if [ -n "$KEY_ALIAS" ] && ! grep -q -- "$KEY_ALIAS" /tmp/ks.txt; then
+            cat /tmp/ks.txt
+            echo "::error::这个 keystore 里没有别名 $KEY_ALIAS（KEY_ALIAS 填错了？）。"
+            exit 1
+          fi
+          # 把真实类型读出来交给 Gradle，免得到别处再猜一遍
+          KSTYPE=$(grep "Keystore type" /tmp/ks.txt | sed 's/.*: *//' | tr -d '\r')
+          echo "密钥库类型：$KSTYPE"
+
           cat > keystore.properties <<EOF
           storeFile=release.jks
           storePassword=$KEYSTORE_PASSWORD
           keyAlias=$KEY_ALIAS
           keyPassword=$KEY_PASSWORD
+          storeType=$KSTYPE
           EOF
           echo "has_key=true" >> "$GITHUB_OUTPUT"
 
