@@ -7,7 +7,7 @@
 
 <p align="center">
   <img src="docs/screenshots/nudge-card.jpg" width="26%" />
-  <img src="docs/screenshots/categories.jpg" width="26%" />
+  <img src="docs/screenshots/home.jpg" width="26%" />
   <img src="docs/screenshots/stats.jpg" width="26%" />
 </p>
 
@@ -26,9 +26,9 @@
 提醒卡片上有四个答案，你选哪个都行：
 
 * **已完成，退出** —— 记一次统计，回到桌面
-* **还在用，再给 N 分钟** —— 推迟 N 分钟（默认 5）后再问一次
+* **再给 N 分钟** —— 推迟 N 分钟（默认 5）后再问一次
 * **我走神了，退出** —— 记一次统计，回到桌面
-* **我正在做正事，请勿打扰** —— 进入冷静期（默认 15 分钟），期间不再打扰
+* **我正在做正事** —— 进入冷静期（默认 15 分钟），期间不再打扰
 
 它**不会**做的事：锁你的屏幕、阻止你打开任何应用、强制关闭你正在用的应用。
 你随时可以忽略那张卡片继续玩——这是设计如此。
